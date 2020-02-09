@@ -10,22 +10,24 @@ import {
 } from "react-native";
 import Loader from "./Loader";
 import PumpSwitch from "./PumpSwitch";
+import CurrentStep from "./CurrentStep";
+import StepForm from "./StepForm";
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 4,
-    borderWidth: 0.5,
-    borderColor: "#d6d7da",
-    height: "90%",
-    width: "90%",
-    padding: 30
+    backgroundColor: "#fff",
+    justifyContent: "center"
+  },
+  title: {
+    fontWeight: "bold",
+    color: "#fff"
   }
 });
 
 class ControlPanel extends Component {
   state = {
     socketConnected: false,
-    tempReading: null,
+    currentTemp: null,
     running: false,
     pumpOne: false,
     errorCount: 0,
@@ -58,8 +60,10 @@ class ControlPanel extends Component {
     const { data } = event;
     const parsed = JSON.parse(data);
     this.setState({
-      tempReading: parsed.current_temp,
-      running: parsed.running
+      currentTemp: parsed.current_temp,
+      running: parsed.running,
+      currentStep: parsed.current_step,
+      timeRemaining: parsed.time_remaining
     });
   };
 
@@ -111,6 +115,13 @@ class ControlPanel extends Component {
     this.setState({ sliderValue: 150 });
   };
 
+  handleStart = async () => {
+    const blob = await fetch("http://192.168.0.29:5001/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+  };
+
   render() {
     if (this.state.socketError) {
       return (
@@ -125,19 +136,16 @@ class ControlPanel extends Component {
     } else {
       return (
         <View style={styles.container}>
-          <Text>
-            {this.state.tempReading
-              ? this.state.tempReading
-              : "Waiting for temp reading"}
-          </Text>
-          <Slider
-            style={{ width: 300, height: 40 }}
-            minimumValue={100}
-            maximumValue={200}
-            step={1}
-            value={this.state.sliderValue}
-            onSlidingComplete={this.handleSliderComplete}
-          />
+          {this.state.currentStep ? (
+            <CurrentStep
+              {...this.state.currentStep}
+              timeRemaining={this.state.timeRemaining}
+              currentTemp={this.state.currentTemp}
+              onStart={this.handleStart}
+            />
+          ) : (
+            <StepForm />
+          )}
           <PumpSwitch
             onChange={this.handleBooleanChange}
             label="Pump"

@@ -3,8 +3,9 @@ import { View, Text, Switch, StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   container: {
-    width: "50%",
-    alignContent: "center"
+    width: "100%",
+    flex: 1,
+    alignContent: "space-between"
   },
   title: {
     fontSize: 19,
